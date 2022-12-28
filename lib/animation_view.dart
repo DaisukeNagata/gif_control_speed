@@ -36,7 +36,8 @@ class AnimationViewState extends State<AnimationView>
               ),
             ));
       } else {
-        widget.c.repeat(min: 0, max: 100, period: Duration(milliseconds: value));
+        widget.c
+            .repeat(min: 0, max: 100, period: Duration(milliseconds: value));
       }
     });
   }
