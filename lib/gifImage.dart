@@ -28,7 +28,6 @@ class GifImage extends StatefulWidget {
     required this.controller,
     required this.width,
     required this.height,
-    required this.frameCount,
     this.excludeFromSemantics = false,
     this.matchTextDirection = false,
     this.gaplessPlayback = false,
@@ -39,7 +38,6 @@ class GifImage extends StatefulWidget {
   final ImageProvider image;
   final double width;
   final double height;
-  final int frameCount;
   final bool matchTextDirection;
   final bool gaplessPlayback;
   final bool excludeFromSemantics;
@@ -70,25 +68,6 @@ class GifImageState extends State<GifImage> {
     widget.controller.removeListener(_listener);
   }
 
-  @override
-  void didUpdateWidget(GifImage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.image != oldWidget.image) {
-      fetchGif(widget.image).then((imageInfors) {
-        if (mounted) {
-          setState(() {
-            _infos = imageInfors;
-            _curIndex = widget.controller.value.toInt();
-          });
-        }
-      });
-    }
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller.removeListener(_listener);
-      widget.controller.addListener(_listener);
-    }
-  }
-
   void _listener() {
     if (_curIndex != widget.controller.value &&
         !widget.controller.value.isInfinite) {
@@ -107,11 +86,10 @@ class GifImageState extends State<GifImage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    fetchGif(widget.image).then((imageInfors) {
+    fetchGif(widget.image).then((imageInfos) {
       if (mounted) {
         setState(() {
-          _infos = imageInfors;
-          _curIndex = widget.controller.value.toInt();
+          _infos = imageInfos;
         });
       }
     });
@@ -140,6 +118,7 @@ class GifImageState extends State<GifImage> {
 
     final codec = await instantiateImageCodec(data.buffer.asUint8List());
     infos = [];
+
     for (int i = 0; i < codec.frameCount; i++) {
       var frameInfo = await codec.getNextFrame();
       infos.add(ImageInfo(image: frameInfo.image));

@@ -36,13 +36,7 @@ class AnimationViewState extends State<AnimationView>
               ),
             ));
       } else {
-        widget.c
-            .repeat(min: 0, max: 53, period: Duration(milliseconds: value))
-            .whenComplete(() {
-          widget.c
-            ..repeat()
-            ..stop();
-        });
+        widget.c.repeat(min: 0, max: 100, period: Duration(milliseconds: value));
       }
     });
   }
@@ -64,7 +58,6 @@ class AnimationViewState extends State<AnimationView>
       image: const AssetImage("assets/g2vO.gif"),
       height: 200,
       width: 200,
-      frameCount: 53,
     );
   }
 }
