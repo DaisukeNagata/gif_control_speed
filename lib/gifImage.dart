@@ -1,9 +1,12 @@
-// ignore_for_file: file_names
-
+// ignore: file_names
 import 'dart:async' show Future, StreamController;
+import 'dart:typed_data';
 
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+
+/// 起動中はデータを保持するため
+List<ImageInfo>? infos = [];
 
 class GifController extends AnimationController {
   GifController({required this.vsync})
@@ -49,23 +52,42 @@ class GifImage extends StatefulWidget {
 
 class GifImageState extends State<GifImage> {
   int _curIndex = 0;
-  // ignore: avoid_init_to_null
-  late var _infos = null;
-
+  List<ImageInfo>? _infos = [];
   ImageInfo? get _imageInfo {
-    return _infos == null ? null : _infos?[_curIndex];
+    // ignore: prefer_is_empty
+    return _infos?.length == 0 ? null : _infos![_curIndex];
   }
 
   @override
   void initState() {
     super.initState();
     widget.controller.addListener(_listener);
+    fetchGif(widget.image).then((imageInfos) {
+      if (mounted) {
+        setState(() {
+          _infos = imageInfos;
+        });
+        if (widget.controller.status == AnimationStatus.forward) {
+          widget.controller.reset();
+          widget.controller.stop();
+        }
+        widget.controller.repeat(
+          min: 0,
+          max: imageInfos?.length.toDouble(),
+          period: Duration(
+            milliseconds: widget.controller.value == 0
+                ? 2000
+                : widget.controller.value.toInt(),
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
     widget.controller.removeListener(_listener);
+    super.dispose();
   }
 
   void _listener() {
@@ -73,9 +95,6 @@ class GifImageState extends State<GifImage> {
         !widget.controller.value.isInfinite) {
       if (mounted) {
         setState(() {
-          if ((widget.controller.value <= _curIndex)) {
-            widget.controller.streamSize.sink.add(0);
-          }
           _curIndex = widget.controller.value.toInt();
         });
       }
@@ -83,21 +102,8 @@ class GifImageState extends State<GifImage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    fetchGif(widget.image).then((imageInfos) {
-      if (mounted) {
-        setState(() {
-          _infos = imageInfos;
-        });
-      }
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final RawImage image = RawImage(
+    final image = RawImage(
       image: _imageInfo?.image,
       width: widget.width,
       height: widget.height,
@@ -107,21 +113,25 @@ class GifImageState extends State<GifImage> {
   }
 
   Future<List<ImageInfo>?> fetchGif(ImageProvider provider) async {
-    List<ImageInfo>? infos = [];
-    dynamic data;
+    var data = ByteData(0);
 
     if (provider is AssetImage) {
-      AssetBundleImageKey key =
-          await provider.obtainKey(const ImageConfiguration());
+      // ignore: use_named_constants
+      final key = await provider.obtainKey(const ImageConfiguration());
       data = await key.bundle.load(key.name);
-    }
 
-    final codec = await instantiateImageCodec(data.buffer.asUint8List());
-    infos = [];
+      final codec = await instantiateImageCodec(data.buffer.asUint8List());
 
-    for (int i = 0; i < codec.frameCount; i++) {
-      var frameInfo = await codec.getNextFrame();
-      infos.add(ImageInfo(image: frameInfo.image));
+      if (infos?.isEmpty == true) {
+        for (var i = 0; i < codec.frameCount; i++) {
+          try {
+            final frameInfo = await codec.getNextFrame();
+            infos?.add(ImageInfo(image: frameInfo.image));
+          } on Exception catch (e) {
+            debugPrint(e.toString());
+          }
+        }
+      }
     }
     return infos;
   }

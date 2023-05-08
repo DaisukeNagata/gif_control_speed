@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gif_control_speed/submain.dart';
 
 import 'gifImage.dart';
 
@@ -24,21 +23,11 @@ class AnimationViewState extends State<AnimationView>
     super.initState();
     _controller = widget.c;
     _controller.streamSize.stream.listen((value) {
-      if (value == 0) {
-        widget.c
-          ..reset()
-          ..stop();
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const SubMainPage(
-                title: 'EveryDaySoft',
-              ),
-            ));
-      } else {
-        widget.c
-            .repeat(min: 0, max: 100, period: Duration(milliseconds: value));
-      }
+      _controller.repeat(
+        min: 0,
+        max: 149,
+        period: Duration(milliseconds: value == 0 ? 1000 : value),
+      );
     });
   }
 
@@ -56,9 +45,9 @@ class AnimationViewState extends State<AnimationView>
   Widget _buildAnimation(BuildContext context) {
     return GifImage(
       controller: widget.c,
-      image: const AssetImage("assets/g2vO.gif"),
-      height: 200,
-      width: 200,
+      image: const AssetImage("assets/animation.webp"),
+      height: MediaQuery.of(context).size.width,
+      width: MediaQuery.of(context).size.width,
     );
   }
 }

@@ -21,26 +21,33 @@ class _MainState extends State<MyApp> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _txButton('stop', () => {_a.c.stop()}),
-              _txButton('-', () => {speed += 100}),
-              _txButton('play', () => {_a.c.streamSize.sink.add(speed)}),
-              _txButton('+', () => {speed > 200 ? speed -= 100 : speed = 200}),
-            ],
-          ),
-          _a,
-        ],
-      ),
-    );
+        title: 'Flutter Demo',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: Stack(
+          children: [
+            Container(
+              color: Colors.grey,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _txButton('stop', () => {_a.c.stop()}),
+                    _txButton('-', () => {speed += 100}),
+                    _txButton('play', () => {_a.c.streamSize.sink.add(speed)}),
+                    _txButton(
+                        '+', () => {speed > 200 ? speed -= 100 : speed = 200}),
+                  ],
+                ),
+                _a,
+              ],
+            ),
+          ],
+        ));
   }
 
   Widget _txButton(String title, VoidCallback func) {
